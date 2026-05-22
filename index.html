@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 Sweepstakes</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #111a14; color: #f0f0e8; }
+    :root { --surface:#1e2b24; --surface2:#162019; --border:rgba(255,255,255,0.1); --text:#f0f0e8; --text2:#aaa; --text3:#777; }
+    .status-done { background:#0d3a1a!important; color:#5ad48a!important; border-color:#1a5a2a!important; }
+    .pred-hit-3 { background:#064e3b!important; color:#6ee7b7!important; }
+    .pred-hit-1 { background:#451a03!important; color:#fbbf24!important; }
+    .template-note { background:#1c1000!important; border-color:#5a3a00!important; color:#fbbf24!important; }
+    .locked-badge { background:#1a3a1a!important; color:#5ad48a!important; }
+    .modal-box { background:#1e2b24!important; }
+  }
+  :root {
+    --green-dark:#0d4a2a; --green-mid:#1a7a45; --green-light:#2aad63;
+    --surface:#ffffff; --surface2:#f7f7f4;
+    --border:rgba(0,0,0,0.1); --text:#1a1a1a; --text2:#555; --text3:#888;
+  }
+  .app { max-width:1100px; margin:0 auto; padding:0 16px 40px; }
+  .header { background:linear-gradient(135deg,#0d4a2a 0%,#1a7a45 100%); color:#fff; padding:20px 24px; border-radius:0 0 16px 16px; margin-bottom:20px; display:flex; align-items:center; gap:14px; }
+  .header-icon { font-size:36px; }
+  .header h1 { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+  .sync-bar { display:flex; align-items:center; gap:8px; font-size:12px; margin-top:4px; }
+  .sync-dot { width:8px; height:8px; border-radius:50%; background:#4ade80; flex-shrink:0; }
+  .sync-dot.syncing { background:#fbbf24; animation:pulse 1s infinite; }
+  .sync-dot.error { background:#f87171; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .tabs { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:20px; flex-wrap:wrap; }
+  .tab { flex:1; min-width:70px; padding:9px 6px; border:none; background:transparent; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; color:var(--text2); transition:all 0.15s; }
+  .tab.active { background:var(--green-dark); color:#fff; }
+  .tab:hover:not(.active) { background:var(--surface2); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:14px; }
+  .card-title { font-size:14px; font-weight:600; margin-bottom:12px; color:var(--text); }
+  .badge { background:var(--green-dark); color:#fff; font-size:11px; padding:2px 8px; border-radius:20px; font-weight:600; }
+  .lb-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .lb-row:last-child { border-bottom:none; }
+  .lb-rank { width:26px; height:26px; border-radius:50%; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--text2); flex-shrink:0; }
+  .lb-rank.r1 { background:#f0b429; color:#7a5200; }
+  .lb-rank.r2 { background:#c0c0c0; color:#444; }
+  .lb-rank.r3 { background:#cd7f32; color:#fff; }
+  .lb-name { flex:1; font-weight:500; font-size:13px; }
+  .lb-pts { font-size:17px; font-weight:700; color:var(--green-mid); min-width:40px; text-align:right; }
+  .lb-breakdown { font-size:11px; color:var(--text3); min-width:72px; text-align:right; }
+  .lb-bar { height:4px; background:var(--surface2); border-radius:2px; flex:1; overflow:hidden; max-width:90px; }
+  .lb-bar-fill { height:100%; background:var(--green-light); border-radius:2px; }
+  .match-row { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--surface2); border-radius:8px; margin-bottom:5px; flex-wrap:wrap; }
+  .match-teams { flex:1; font-size:13px; font-weight:500; min-width:150px; }
+  .match-meta { font-size:11px; color:var(--text3); }
+  .match-score-input { display:flex; align-items:center; gap:5px; }
+  .score-box { width:42px; padding:6px 4px; text-align:center; border:1px solid var(--border); border-radius:6px; font-size:14px; font-weight:700; background:var(--surface); color:var(--text); }
+  .score-box:focus { outline:2px solid var(--green-mid); }
+  .score-sep { font-weight:700; color:var(--text3); }
+  .match-status { font-size:11px; padding:3px 8px; border-radius:12px; font-weight:600; white-space:nowrap; background:var(--surface2); color:var(--text3); border:1px solid var(--border); }
+  .status-done { background:#e8f5e9!important; color:#2a7a45!important; border:1px solid #a8d5b0!important; }
+  .upload-area { border:2px dashed var(--border); border-radius:12px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; }
+  .upload-area:hover { border-color:var(--green-mid); background:rgba(26,122,69,0.04); }
+  .upload-area.disabled { opacity:0.5; cursor:not-allowed; pointer-events:none; }
+  input[type=file] { display:none; }
+  .pred-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .pred-table th { text-align:left; padding:7px 8px; border-bottom:2px solid var(--border); color:var(--text3); font-size:11px; font-weight:600; white-space:nowrap; }
+  .pred-table td { padding:7px 8px; border-bottom:1px solid var(--border); }
+  .pred-table tr:last-child td { border-bottom:none; }
+  .pred-hit-3 { background:#bbf7d0; color:#065f46; border-radius:4px; padding:1px 6px; font-weight:700; }
+  .pred-hit-1 { background:#fef3c7; color:#92400e; border-radius:4px; padding:1px 6px; font-weight:700; }
+  .pred-miss { color:var(--text3); }
+  .btn { padding:9px 16px; border-radius:8px; border:none; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .btn-primary { background:var(--green-dark); color:#fff; }
+  .btn-primary:hover { background:var(--green-mid); }
+  .btn-sm { padding:5px 10px; font-size:12px; }
+  .btn-danger { background:#fee2e2; color:#991b1b; }
+  .btn-danger:hover { background:#fca5a5; }
+  .btn-warning { background:#fef3c7; color:#92400e; }
+  .btn-warning:hover { background:#fde68a; }
+  .empty { text-align:center; padding:28px; color:var(--text3); font-size:14px; }
+  .empty-icon { font-size:28px; margin-bottom:8px; }
+  .player-pills { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
+  .pill { padding:5px 12px; border-radius:20px; background:var(--surface2); border:1px solid var(--border); font-size:12px; cursor:pointer; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .pill.active { background:var(--green-dark); color:#fff; border-color:var(--green-dark); }
+  .stats-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+  .stat-card { background:var(--surface2); border-radius:10px; padding:12px; text-align:center; }
+  .stat-num { font-size:22px; font-weight:700; color:var(--green-mid); }
+  .stat-label { font-size:11px; color:var(--text3); margin-top:2px; }
+  .template-note { background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 14px; font-size:13px; color:#78350f; margin-bottom:14px; }
+  .info-note { background:#e8f5e9; border:1px solid #a8d5b0; border-radius:10px; padding:12px 14px; font-size:13px; color:#1a5c2a; margin-bottom:14px; }
+  .warning-note { background:#fff3e0; border:1px solid #ffcc80; border-radius:10px; padding:12px 14px; font-size:13px; color:#7a4000; margin-bottom:14px; }
+  .locked-note { background:#fce8e8; border:1px solid #f5a0a0; border-radius:10px; padding:12px 14px; font-size:13px; color:#7a1a1a; margin-bottom:14px; }
+  .scroll-x { overflow-x:auto; }
+  .day-header { font-size:12px; font-weight:700; color:var(--green-dark); background:var(--surface2); padding:7px 12px; border-radius:8px; margin:14px 0 6px; border-left:3px solid var(--green-mid); }
+  .group-filter { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; }
+  .gf-btn { padding:4px 11px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); font-size:12px; font-weight:600; cursor:pointer; color:var(--text2); }
+  .gf-btn.active { background:var(--green-dark); color:#fff; border-color:var(--green-dark); }
+  .saving-toast { position:fixed; bottom:20px; right:20px; background:var(--green-dark); color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; font-weight:500; opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:999; }
+  .saving-toast.show { opacity:1; }
+  .locked-badge { background:#e8f5e9; color:#1a5c2a; font-size:11px; padding:2px 8px; border-radius:20px; font-weight:600; }
+  .submitted-time { font-size:10px; color:var(--text3); }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .modal-overlay.hidden { display:none; }
+  .modal-box { background:var(--surface); border-radius:16px; padding:28px; width:320px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .modal-title { font-size:16px; font-weight:700; margin-bottom:6px; }
+  .modal-sub { font-size:13px; color:var(--text3); margin-bottom:18px; }
+  .modal-input { width:100%; padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:18px; font-weight:700; text-align:center; letter-spacing:4px; background:var(--surface); color:var(--text); margin-bottom:14px; }
+  .modal-input:focus { outline:none; border-color:var(--green-mid); }
+  .modal-error { color:#e53e3e; font-size:12px; margin-bottom:12px; min-height:16px; }
+  .modal-btns { display:flex; gap:8px; }
+  .modal-btns .btn { flex:1; }
+  .admin-bar { display:flex; align-items:center; gap:10px; background:#e8f5e9; border:1px solid #a8d5b0; border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:#1a5c2a; }
+  .admin-bar.hidden { display:none; }
+
+  /* Log table */
+  .log-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .log-table th { text-align:left; padding:6px 8px; border-bottom:2px solid var(--border); color:var(--text3); font-size:11px; font-weight:600; }
+  .log-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
+  .log-table tr:last-child td { border-bottom:none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-icon">⚽</div>
+    <div style="flex:1">
+      <h1>World Cup 2026 Sweepstakes</h1>
+      <div class="sync-bar">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncStatus" style="opacity:0.85">Connecting...</span>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+    <button class="tab" onclick="switchTab('scores')">📋 Enter Scores</button>
+    <button class="tab" onclick="switchTab('predictions')">🔍 Predictions</button>
+    <button class="tab" onclick="switchTab('submit')">📤 Submit</button>
+  </div>
+  <div id="tab-leaderboard"></div>
+  <div id="tab-scores" style="display:none"></div>
+  <div id="tab-predictions" style="display:none"></div>
+  <div id="tab-submit" style="display:none"></div>
+</div>
+<div class="saving-toast" id="toast"></div>
+
+<!-- PIN modal -->
+<div class="modal-overlay hidden" id="pinModal">
+  <div class="modal-box">
+    <div class="modal-title" id="pinModalTitle">🔐 Admin access</div>
+    <div class="modal-sub" id="pinModalSub">Enter your PIN to continue</div>
+    <input class="modal-input" type="password" id="pinInput" maxlength="10" placeholder="••••" onkeydown="if(event.key==='Enter')submitPin()">
+    <div class="modal-error" id="pinError"></div>
+    <div class="modal-btns">
+      <button class="btn" style="background:var(--surface2);color:var(--text2)" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPin()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GS_URL = 'https://script.google.com/macros/s/AKfycbw-Y7B0gfycche5fiDE_CBk9KDAGenBpQul4G8dpt5lt050kqiPjaa-iYdMWUkXbRl4sw/exec';
+
+// DEADLINE: 9 June 2026 COB (23:59 London time)
+const DEADLINE = new Date('2026-06-09T23:59:00+01:00');
+
+// Admin PIN hash — SHA-256 of the actual PIN.
+// Default PIN is: WC2026admin
+// To change: run this in browser console: crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpin')).then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+const ADMIN_PIN_HASH = '45553cb1d7ff20a12ab1cb54e5f5f4d625f27ec5f13be96ebf4912745d217258';
+
+const SCHEDULE = [
+  {id:1,group:'A',home:'Mexico',away:'South Africa',date:'2026-06-11',kickoff:'20:00',venue:'Mexico City'},
+  {id:2,group:'A',home:'South Korea',away:'Czech Republic',date:'2026-06-12',kickoff:'03:00',venue:'Zapopan'},
+  {id:7,group:'B',home:'Canada',away:'Bosnia & Herzegovina',date:'2026-06-12',kickoff:'20:00',venue:'Toronto'},
+  {id:19,group:'D',home:'USA',away:'Paraguay',date:'2026-06-13',kickoff:'02:00',venue:'Los Angeles'},
+  {id:8,group:'B',home:'Qatar',away:'Switzerland',date:'2026-06-13',kickoff:'20:00',venue:'Santa Clara'},
+  {id:13,group:'C',home:'Brazil',away:'Morocco',date:'2026-06-13',kickoff:'23:00',venue:'New Jersey'},
+  {id:14,group:'C',home:'Haiti',away:'Scotland',date:'2026-06-14',kickoff:'02:00',venue:'Foxborough'},
+  {id:20,group:'D',home:'Australia',away:'Turkey',date:'2026-06-14',kickoff:'05:00',venue:'Vancouver'},
+  {id:25,group:'E',home:'Germany',away:'Curacao',date:'2026-06-14',kickoff:'18:00',venue:'Houston'},
+  {id:31,group:'F',home:'Netherlands',away:'Japan',date:'2026-06-14',kickoff:'21:00',venue:'Arlington'},
+  {id:26,group:'E',home:'Ivory Coast',away:'Ecuador',date:'2026-06-15',kickoff:'00:00',venue:'Philadelphia'},
+  {id:32,group:'F',home:'Sweden',away:'Tunisia',date:'2026-06-15',kickoff:'03:00',venue:'Guadalupe'},
+  {id:43,group:'H',home:'Spain',away:'Cape Verde',date:'2026-06-15',kickoff:'17:00',venue:'Atlanta'},
+  {id:37,group:'G',home:'Belgium',away:'Egypt',date:'2026-06-15',kickoff:'20:00',venue:'Seattle'},
+  {id:44,group:'H',home:'Saudi Arabia',away:'Uruguay',date:'2026-06-15',kickoff:'23:00',venue:'Miami'},
+  {id:38,group:'G',home:'Iran',away:'New Zealand',date:'2026-06-16',kickoff:'02:00',venue:'Los Angeles'},
+  {id:49,group:'I',home:'France',away:'Senegal',date:'2026-06-16',kickoff:'20:00',venue:'New Jersey'},
+  {id:50,group:'I',home:'Iraq',away:'Norway',date:'2026-06-16',kickoff:'23:00',venue:'Foxborough'},
+  {id:55,group:'J',home:'Argentina',away:'Algeria',date:'2026-06-17',kickoff:'02:00',venue:'Kansas City'},
+  {id:56,group:'J',home:'Austria',away:'Jordan',date:'2026-06-17',kickoff:'05:00',venue:'Santa Clara'},
+  {id:61,group:'K',home:'Portugal',away:'DR Congo',date:'2026-06-17',kickoff:'18:00',venue:'Houston'},
+  {id:67,group:'L',home:'England',away:'Croatia',date:'2026-06-17',kickoff:'21:00',venue:'Arlington'},
+  {id:68,group:'L',home:'Ghana',away:'Panama',date:'2026-06-18',kickoff:'00:00',venue:'Toronto'},
+  {id:62,group:'K',home:'Uzbekistan',away:'Colombia',date:'2026-06-18',kickoff:'03:00',venue:'Mexico City'},
+  {id:3,group:'A',home:'Czech Republic',away:'South Africa',date:'2026-06-18',kickoff:'17:00',venue:'Atlanta'},
+  {id:9,group:'B',home:'Switzerland',away:'Bosnia & Herzegovina',date:'2026-06-18',kickoff:'20:00',venue:'Los Angeles'},
+  {id:10,group:'B',home:'Canada',away:'Qatar',date:'2026-06-18',kickoff:'23:00',venue:'Vancouver'},
+  {id:4,group:'A',home:'Mexico',away:'South Korea',date:'2026-06-19',kickoff:'02:00',venue:'Zapopan'},
+  {id:21,group:'D',home:'USA',away:'Australia',date:'2026-06-19',kickoff:'20:00',venue:'Seattle'},
+  {id:15,group:'C',home:'Scotland',away:'Morocco',date:'2026-06-19',kickoff:'23:00',venue:'Foxborough'},
+  {id:16,group:'C',home:'Brazil',away:'Haiti',date:'2026-06-20',kickoff:'02:00',venue:'Philadelphia'},
+  {id:22,group:'D',home:'Turkey',away:'Paraguay',date:'2026-06-20',kickoff:'05:00',venue:'Santa Clara'},
+  {id:34,group:'F',home:'Netherlands',away:'Sweden',date:'2026-06-20',kickoff:'18:00',venue:'Houston'},
+  {id:27,group:'E',home:'Germany',away:'Ivory Coast',date:'2026-06-20',kickoff:'21:00',venue:'Toronto'},
+  {id:28,group:'E',home:'Ecuador',away:'Curacao',date:'2026-06-21',kickoff:'01:00',venue:'Kansas City'},
+  {id:33,group:'F',home:'Tunisia',away:'Japan',date:'2026-06-21',kickoff:'05:00',venue:'Guadalupe'},
+  {id:45,group:'H',home:'Spain',away:'Saudi Arabia',date:'2026-06-21',kickoff:'17:00',venue:'Atlanta'},
+  {id:39,group:'G',home:'Belgium',away:'Iran',date:'2026-06-21',kickoff:'20:00',venue:'Los Angeles'},
+  {id:46,group:'H',home:'Uruguay',away:'Cape Verde',date:'2026-06-21',kickoff:'23:00',venue:'Miami'},
+  {id:40,group:'G',home:'New Zealand',away:'Egypt',date:'2026-06-22',kickoff:'02:00',venue:'Vancouver'},
+  {id:57,group:'J',home:'Argentina',away:'Austria',date:'2026-06-22',kickoff:'18:00',venue:'Arlington'},
+  {id:51,group:'I',home:'France',away:'Iraq',date:'2026-06-22',kickoff:'22:00',venue:'Philadelphia'},
+  {id:52,group:'I',home:'Norway',away:'Senegal',date:'2026-06-23',kickoff:'01:00',venue:'Toronto'},
+  {id:58,group:'J',home:'Jordan',away:'Algeria',date:'2026-06-23',kickoff:'04:00',venue:'Santa Clara'},
+  {id:63,group:'K',home:'Portugal',away:'Uzbekistan',date:'2026-06-23',kickoff:'18:00',venue:'Houston'},
+  {id:69,group:'L',home:'England',away:'Ghana',date:'2026-06-23',kickoff:'21:00',venue:'Foxborough'},
+  {id:70,group:'L',home:'Panama',away:'Croatia',date:'2026-06-24',kickoff:'00:00',venue:'Foxborough'},
+  {id:64,group:'K',home:'Colombia',away:'DR Congo',date:'2026-06-24',kickoff:'03:00',venue:'Zapopan'},
+  {id:11,group:'B',home:'Switzerland',away:'Canada',date:'2026-06-24',kickoff:'20:00',venue:'Vancouver'},
+  {id:12,group:'B',home:'Bosnia & Herzegovina',away:'Qatar',date:'2026-06-24',kickoff:'20:00',venue:'Seattle'},
+  {id:17,group:'C',home:'Morocco',away:'Haiti',date:'2026-06-24',kickoff:'23:00',venue:'Atlanta'},
+  {id:18,group:'C',home:'Scotland',away:'Brazil',date:'2026-06-24',kickoff:'23:00',venue:'Miami'},
+  {id:5,group:'A',home:'South Africa',away:'South Korea',date:'2026-06-25',kickoff:'02:00',venue:'Guadalupe'},
+  {id:6,group:'A',home:'Czech Republic',away:'Mexico',date:'2026-06-25',kickoff:'02:00',venue:'Mexico City'},
+  {id:29,group:'E',home:'Curacao',away:'Ivory Coast',date:'2026-06-25',kickoff:'21:00',venue:'Philadelphia'},
+  {id:30,group:'E',home:'Ecuador',away:'Germany',date:'2026-06-25',kickoff:'21:00',venue:'New Jersey'},
+  {id:35,group:'F',home:'Tunisia',away:'Netherlands',date:'2026-06-26',kickoff:'00:00',venue:'Kansas City'},
+  {id:36,group:'F',home:'Japan',away:'Sweden',date:'2026-06-26',kickoff:'00:00',venue:'Arlington'},
+  {id:23,group:'D',home:'Turkey',away:'USA',date:'2026-06-26',kickoff:'03:00',venue:'Los Angeles'},
+  {id:24,group:'D',home:'Paraguay',away:'Australia',date:'2026-06-26',kickoff:'03:00',venue:'Santa Clara'},
+  {id:53,group:'I',home:'Norway',away:'France',date:'2026-06-26',kickoff:'20:00',venue:'Foxborough'},
+  {id:54,group:'I',home:'Senegal',away:'Iraq',date:'2026-06-26',kickoff:'20:00',venue:'Toronto'},
+  {id:47,group:'H',home:'Cape Verde',away:'Saudi Arabia',date:'2026-06-27',kickoff:'01:00',venue:'Houston'},
+  {id:48,group:'H',home:'Uruguay',away:'Spain',date:'2026-06-27',kickoff:'01:00',venue:'Zapopan'},
+  {id:41,group:'G',home:'New Zealand',away:'Belgium',date:'2026-06-27',kickoff:'04:00',venue:'Vancouver'},
+  {id:42,group:'G',home:'Egypt',away:'Iran',date:'2026-06-27',kickoff:'04:00',venue:'Seattle'},
+  {id:71,group:'L',home:'Panama',away:'England',date:'2026-06-27',kickoff:'22:00',venue:'New Jersey'},
+  {id:72,group:'L',home:'Croatia',away:'Ghana',date:'2026-06-27',kickoff:'22:00',venue:'Philadelphia'},
+  {id:65,group:'K',home:'Colombia',away:'Portugal',date:'2026-06-28',kickoff:'00:30',venue:'Miami'},
+  {id:66,group:'K',home:'DR Congo',away:'Uzbekistan',date:'2026-06-28',kickoff:'00:30',venue:'Atlanta'},
+  {id:59,group:'J',home:'Algeria',away:'Austria',date:'2026-06-28',kickoff:'03:00',venue:'Kansas City'},
+  {id:60,group:'J',home:'Jordan',away:'Argentina',date:'2026-06-28',kickoff:'03:00',venue:'Arlington'},
+];
+
+let state = {
+  matches: SCHEDULE.map(m=>({...m,homeScore:null,awayScore:null})),
+  players: [],   // {name, predictions:{}, submittedAt, locked:true}
+  log: [],       // {action, name, timestamp, note}
+  selectedPlayer: null,
+  scoreGroupFilter: 'ALL',
+  activeTab: 'leaderboard',
+  saving: false
+};
+
+let adminUnlocked = false;
+let pendingPinAction = null;
+
+// ── PIN UTILS ──────────────────────────────────────────────────────────────────
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+function isDeadlinePassed() {
+  return new Date() > DEADLINE;
+}
+
+function deadlineStr() {
+  return DEADLINE.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' at 23:59';
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openPinModal(title, sub, onSuccess) {
+  document.getElementById('pinModalTitle').textContent = title;
+  document.getElementById('pinModalSub').textContent = sub;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinModal').classList.remove('hidden');
+  document.getElementById('pinInput').focus();
+  pendingPinAction = onSuccess;
+}
+function closeModal() {
+  document.getElementById('pinModal').classList.add('hidden');
+  pendingPinAction = null;
+}
+async function submitPin() {
+  const pin = document.getElementById('pinInput').value;
+  if (!pin) return;
+  const hash = await hashPin(pin);
+  if (hash === ADMIN_PIN_HASH) {
+    adminUnlocked = true;
+    document.getElementById('pinError').textContent = '';
+    closeModal();
+    if (pendingPinAction) pendingPinAction();
+  } else {
+    document.getElementById('pinError').textContent = '❌ Incorrect PIN';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+
+function requireAdmin(action) {
+  if (adminUnlocked) { action(); return; }
+  openPinModal('🔐 Admin access required', 'Enter your admin PIN to continue', action);
+}
+
+// ── GOOGLE SHEETS SYNC ─────────────────────────────────────────────────────────
+async function loadFromSheets() {
+  setSyncStatus('syncing','Syncing...');
+  try {
+    const res = await fetch(GS_URL+'?t='+Date.now());
+    const data = await res.json();
+    if (data.matches) {
+      state.matches = SCHEDULE.map(m=>{
+        const sv=data.matches.find(x=>x.id===m.id);
+        return {...m,homeScore:sv?.homeScore??null,awayScore:sv?.awayScore??null};
+      });
+    }
+    if (data.players) state.players = data.players;
+    if (data.log) state.log = data.log;
+    setSyncStatus('ok','Live · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
+    renderTab(state.activeTab);
+  } catch(e) { setSyncStatus('error','Sync failed — retrying'); }
+}
+
+async function saveToSheets() {
+  if (state.saving) return;
+  state.saving = true;
+  setSyncStatus('syncing','Saving...');
+  showToast('Saving...');
+  try {
+    const payload = {
+      matches: state.matches.map(m=>({id:m.id,homeScore:m.homeScore,awayScore:m.awayScore})),
+      players: state.players,
+      log: state.log
+    };
+    await fetch(GS_URL,{method:'POST',body:JSON.stringify(payload)});
+    setSyncStatus('ok','Saved · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
+    showToast('✅ Saved!');
+  } catch(e) { setSyncStatus('error','Save failed'); showToast('❌ Save failed'); }
+  state.saving = false;
+}
+
+function setSyncStatus(status,msg){
+  const dot=document.getElementById('syncDot'); const txt=document.getElementById('syncStatus');
+  if(!dot||!txt) return;
+  dot.className='sync-dot'+(status==='syncing'?' syncing':status==='error'?' error':'');
+  txt.textContent=msg;
+}
+function showToast(msg){
+  const t=document.getElementById('toast'); if(!t) return;
+  t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
+}
+function addLog(action,name,note=''){
+  state.log.unshift({action,name,timestamp:new Date().toISOString(),note});
+  if(state.log.length>100) state.log=state.log.slice(0,100);
+}
+
+// ── SCORING ────────────────────────────────────────────────────────────────────
+function getResult(h,a){return h>a?'H':a>h?'A':'D';}
+function scoreForMatch(pred,match){
+  if(match.homeScore===null||match.awayScore===null) return {pts:0,type:'pending'};
+  if(pred.home===null||pred.home===undefined) return {pts:0,type:'no_pred'};
+  if(pred.home===match.homeScore&&pred.away===match.awayScore) return {pts:3,type:'exact'};
+  if(getResult(pred.home,pred.away)===getResult(match.homeScore,match.awayScore)) return {pts:1,type:'result'};
+  return {pts:0,type:'miss'};
+}
+function calcScore(player){
+  let total=0,exact=0,result=0;
+  state.matches.forEach(m=>{
+    if(m.homeScore===null) return;
+    const pred=player.predictions[m.id]||{};
+    const s=scoreForMatch({home:pred.home??null,away:pred.away??null},m);
+    total+=s.pts; if(s.type==='exact') exact++; if(s.type==='result') result++;
+  });
+  return {total,exact,result};
+}
+function getLeaderboard(){
+  return state.players.map(p=>({...p,...calcScore(p)})).sort((a,b)=>b.total-a.total||b.exact-a.exact);
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(tab){
+  state.activeTab=tab;
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',['leaderboard','scores','predictions','submit'][i]===tab);
+  });
+  ['leaderboard','scores','predictions','submit'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'':'none';
+  });
+  renderTab(tab);
+}
+function renderTab(tab){
+  if(tab==='leaderboard') renderLeaderboard();
+  else if(tab==='scores') renderScores();
+  else if(tab==='predictions') renderPredictions();
+  else if(tab==='submit') renderSubmit();
+}
+
+// ── LEADERBOARD ────────────────────────────────────────────────────────────────
+function renderLeaderboard(){
+  const el=document.getElementById('tab-leaderboard');
+  const lb=getLeaderboard();
+  const played=state.matches.filter(m=>m.homeScore!==null).length;
+  const maxPts=lb.length?Math.max(lb[0].total,1):1;
+  let html=`<div class="stats-grid">
+    <div class="stat-card"><div class="stat-num">${state.players.length}</div><div class="stat-label">Participants</div></div>
+    <div class="stat-card"><div class="stat-num">${played}</div><div class="stat-label">Played</div></div>
+    <div class="stat-card"><div class="stat-num">${state.matches.length-played}</div><div class="stat-label">Remaining</div></div>
+  </div>`;
+  if(!state.players.length){
+    html+=`<div class="card"><div class="empty"><div class="empty-icon">👥</div>No participants yet. Submit your predictions in the Submit tab.</div></div>`;
+  } else {
+    html+=`<div class="card"><div class="card-title">🏆 Standings</div>`;
+    lb.forEach((p,i)=>{
+      const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+      const predCount=Object.keys(p.predictions||{}).length;
+      html+=`<div class="lb-row">
+        <div class="lb-rank ${rc}">${i+1}</div>
+        <div class="lb-name">${esc(p.name)}<br><span class="submitted-time">${p.submittedAt?'Submitted '+fmtDate(p.submittedAt):'No predictions'}</span></div>
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${Math.round(p.total/maxPts*100)}%"></div></div>
+        <div class="lb-breakdown">✅${p.exact} ✔️${p.result}</div>
+        <div class="lb-pts">${p.total}pts</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  el.innerHTML=html;
+}
+
+// ── SCORES (admin only) ────────────────────────────────────────────────────────
+function renderScores(){
+  const el=document.getElementById('tab-scores');
+  let html='';
+
+  if(!adminUnlocked){
+    html+=`<div class="card" style="text-align:center;padding:32px">
+      <div style="font-size:36px;margin-bottom:12px">🔐</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px">Admin access required</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Only the admin can enter match scores</div>
+      <button class="btn btn-primary" onclick="requireAdmin(()=>renderScores())">Enter PIN</button>
+    </div>`;
+    el.innerHTML=html; return;
+  }
+
+  html+=`<div class="admin-bar">🔓 Admin mode — you can enter match scores</div>`;
+
+  const groups=['ALL','A','B','C','D','E','F','G','H','I','J','K','L'];
+  const f=state.scoreGroupFilter||'ALL';
+  html+=`<div class="group-filter">`;
+  groups.forEach(g=>{html+=`<button class="gf-btn ${f===g?'active':''}" onclick="setGroupFilter('${g}')">${g==='ALL'?'All':'Grp '+g}</button>`;});
+  html+=`</div>`;
+
+  const filtered=state.matches.filter(m=>f==='ALL'||m.group===f);
+  const byDate={};
+  filtered.forEach(m=>{if(!byDate[m.date]) byDate[m.date]=[]; byDate[m.date].push(m);});
+  const fmt=d=>new Date(d+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  html+=`<div class="card"><div class="card-title">📋 Enter Match Results</div>`;
+  Object.keys(byDate).sort().forEach(date=>{
+    html+=`<div class="day-header">${fmt(date)}</div>`;
+    byDate[date].forEach(m=>{
+      const done=m.homeScore!==null;
+      html+=`<div class="match-row">
+        <div style="flex:1;min-width:150px">
+          <div class="match-teams">${esc(m.home)} <span style="color:var(--text3)">vs</span> ${esc(m.away)}</div>
+          <div class="match-meta">Group ${m.group} · ${m.kickoff} · ${esc(m.venue)}</div>
+        </div>
+        <div class="match-score-input">
+          <input class="score-box" type="number" min="0" max="20" value="${done?m.homeScore:''}" placeholder="?" id="h${m.id}" onchange="setScore(${m.id})">
+          <span class="score-sep">–</span>
+          <input class="score-box" type="number" min="0" max="20" value="${done?m.awayScore:''}" placeholder="?" id="a${m.id}" onchange="setScore(${m.id})">
+        </div>
+        <span class="match-status ${done?'status-done':''}">${done?m.homeScore+' – '+m.awayScore:'Pending'}</span>
+        ${done?`<button class="btn btn-sm btn-danger" onclick="clearScore(${m.id})">✕</button>`:''}
+      </div>`;
+    });
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+function setGroupFilter(g){state.scoreGroupFilter=g;renderTab('scores');}
+function setScore(id){
+  const h=parseInt(document.getElementById('h'+id)?.value);
+  const a=parseInt(document.getElementById('a'+id)?.value);
+  const m=state.matches.find(x=>x.id===id);
+  if(!m||isNaN(h)||isNaN(a)||h<0||a<0) return;
+  m.homeScore=h; m.awayScore=a;
+  addLog('score',`Match ${id}`,`${h}–${a}`);
+  saveToSheets(); renderTab('scores');
+}
+function clearScore(id){
+  const m=state.matches.find(x=>x.id===id);
+  if(m){m.homeScore=null;m.awayScore=null;addLog('score_clear',`Match ${id}`);saveToSheets();renderTab('scores');}
+}
+
+// ── PREDICTIONS ────────────────────────────────────────────────────────────────
+function renderPredictions(){
+  const el=document.getElementById('tab-predictions');
+  if(!state.players.length){el.innerHTML=`<div class="card"><div class="empty"><div class="empty-icon">🔍</div>No predictions submitted yet.</div></div>`;return;}
+  const sel=state.selectedPlayer||state.players[0].name;
+  state.selectedPlayer=sel;
+  const player=state.players.find(p=>p.name===sel);
+  let html=`<div class="player-pills">`;
+  state.players.forEach(p=>{
+    const s=calcScore(p);
+    const sn=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html+=`<div class="pill ${p.name===sel?'active':''}" onclick="selectPlayer('${sn}')">${esc(p.name)} <strong>${s.total}pts</strong></div>`;
+  });
+  html+=`</div>`;
+  if(player){
+    const s=calcScore(player);
+    html+=`<div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${s.total}</div><div class="stat-label">Total points</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#059669">${s.exact}</div><div class="stat-label">Exact (3pts)</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#d97706">${s.result}</div><div class="stat-label">Result (1pt)</div></div>
+    </div>`;
+    if(player.submittedAt){
+      html+=`<div class="info-note">🔒 Predictions locked — submitted on ${fmtDate(player.submittedAt)}</div>`;
+    }
+    html+=`<div class="card"><div class="scroll-x"><table class="pred-table"><thead><tr><th>Match</th><th>Grp</th><th>Prediction</th><th>Actual</th><th>Pts</th></tr></thead><tbody>`;
+    state.matches.forEach(m=>{
+      const pred=player.predictions[m.id]||{};
+      const hasPred=pred.home!==null&&pred.home!==undefined;
+      const hasResult=m.homeScore!==null;
+      const s=hasPred?scoreForMatch({home:pred.home,away:pred.away},m):{pts:0,type:'no_pred'};
+      let badge=`<span class="pred-miss">—</span>`;
+      if(hasResult){if(!hasPred) badge=`<span class="pred-miss">0</span>`;else if(s.type==='exact') badge=`<span class="pred-hit-3">+3</span>`;else if(s.type==='result') badge=`<span class="pred-hit-1">+1</span>`;else badge=`<span class="pred-miss">0</span>`;}
+      html+=`<tr><td>${esc(m.home)} vs ${esc(m.away)}</td><td><span class="badge">${m.group}</span></td><td>${hasPred?`${pred.home}–${pred.away}`:'<span style="color:var(--text3)">—</span>'}</td><td>${hasResult?`<strong>${m.homeScore}–${m.awayScore}</strong>`:'<span style="color:var(--text3)">TBD</span>'}</td><td>${badge}</td></tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+  }
+  el.innerHTML=html;
+}
+function selectPlayer(name){state.selectedPlayer=name;renderTab('predictions');}
+
+// ── SUBMIT TAB (was Setup) ─────────────────────────────────────────────────────
+function renderSubmit(){
+  const el=document.getElementById('tab-submit');
+  const deadlinePassed=isDeadlinePassed();
+  let html='';
+
+  // ── Public: upload section ──
+  if(deadlinePassed){
+    html+=`<div class="locked-note">🔒 The submission deadline has passed (${deadlineStr()}). No new predictions can be accepted.</div>`;
+  } else {
+    html+=`<div class="template-note">📥 Fill in your name and predictions in the Excel template, then upload it here.<br>
+    <strong>Deadline: ${deadlineStr()}.</strong> Once submitted, your predictions are locked and cannot be changed.</div>`;
+    html+=`<div class="card"><div class="card-title">📤 Upload your predictions</div>
+      <div class="upload-area" onclick="document.getElementById('xlFile').click()" id="dropzone">
+        <div style="font-size:32px;margin-bottom:10px">📊</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:5px">Click to upload your Excel file</div>
+        <div style="font-size:12px;color:var(--text3)">Your name is read from cell D1 · predictions from columns E & G</div>
+      </div>
+      <input type="file" id="xlFile" accept=".xlsx,.xls" onchange="handleFile(this)">
+      <div id="upload-status" style="margin-top:10px;font-size:13px;"></div>
+    </div>`;
+  }
+
+  // ── Submissions list (public, read-only) ──
+  html+=`<div class="card"><div class="card-title">✅ Submissions (${state.players.filter(p=>p.submittedAt).length}/${state.players.length})</div>`;
+  if(!state.players.length){
+    html+=`<div class="empty"><div class="empty-icon">👤</div>No submissions yet.</div>`;
+  } else {
+    html+=`<table class="log-table"><thead><tr><th>Name</th><th>Submitted</th><th>Predictions</th></tr></thead><tbody>`;
+    [...state.players].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{
+      const count=Object.keys(p.predictions||{}).length;
+      html+=`<tr>
+        <td><strong>${esc(p.name)}</strong></td>
+        <td>${p.submittedAt?fmtDate(p.submittedAt):'<span style="color:var(--text3)">—</span>'}</td>
+        <td>${count} / 72 matches</td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+  html+=`</div>`;
+
+  // ── Admin section ──
+  html+=`<div class="card">`;
+  if(!adminUnlocked){
+    html+=`<div style="text-align:center;padding:12px 0">
+      <button class="btn btn-warning" onclick="requireAdmin(()=>renderSubmit())">🔐 Admin options</button>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">Only the admin can remove entries or add participants manually</div>
+    </div>`;
+  } else {
+    html+=`<div class="admin-bar" style="margin-bottom:14px">🔓 Admin mode</div>`;
+    html+=`<div class="card-title">Admin tools</div>`;
+    // Manual add
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <input id="newName" placeholder="Add participant manually" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface);color:var(--text);flex:1;min-width:140px">
+      <button class="btn btn-primary" onclick="addManual()">Add</button>
+    </div>`;
+    // Remove buttons
+    if(state.players.length){
+      html+=`<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:8px">Remove participant</div>`;
+      html+=`<div class="player-pills">`;
+      state.players.forEach(p=>{
+        const sn=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        html+=`<div class="pill">${esc(p.name)} <span style="cursor:pointer;color:#e53e3e;margin-left:4px" onclick="adminRemove('${sn}')">✕</span></div>`;
+      });
+      html+=`</div>`;
+      html+=`<button class="btn btn-danger btn-sm" style="margin-top:10px" onclick="adminClearAll()">Clear all participants</button>`;
+    }
+    // Re-upload for specific person (admin override)
+    html+=`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:8px">Re-upload for a participant (admin override)</div>
+      <div class="upload-area" onclick="document.getElementById('xlFileAdmin').click()" style="padding:16px">
+        <div style="font-size:13px;font-weight:600">Upload replacement file</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">This will overwrite existing predictions and log the change</div>
+      </div>
+      <input type="file" id="xlFileAdmin" accept=".xlsx,.xls" onchange="handleAdminFile(this)">
+      <div id="admin-upload-status" style="margin-top:8px;font-size:12px;"></div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  el.innerHTML=html;
+
+  // Drag and drop
+  const dz=document.getElementById('dropzone');
+  if(dz){
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--green-mid)';});
+    dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+    dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)processFile(f,false);});
+  }
+}
+
+function addManual(){
+  const name=document.getElementById('newName').value.trim();
+  if(!name) return;
+  if(state.players.find(p=>p.name===name)){alert('Already exists');return;}
+  state.players.push({name,predictions:{},submittedAt:null,locked:false});
+  addLog('admin_add',name,'manual add');
+  saveToSheets(); renderTab('submit');
+}
+function adminRemove(name){
+  if(!confirm(`Remove ${name}? This cannot be undone.`)) return;
+  state.players=state.players.filter(p=>p.name!==name);
+  addLog('admin_remove',name,'admin removed');
+  saveToSheets(); renderTab('submit');
+}
+function adminClearAll(){
+  if(!confirm('Clear ALL participants? This cannot be undone.')) return;
+  state.players=[];
+  addLog('admin_clear_all','ALL','admin cleared all');
+  saveToSheets(); renderTab('submit');
+}
+
+function handleFile(input){ if(input.files[0]) processFile(input.files[0],false); }
+function handleAdminFile(input){ if(input.files[0]) processFile(input.files[0],true); }
+
+// ── EXCEL PARSER ───────────────────────────────────────────────────────────────
+function processFile(file, isAdminOverride){
+  if(!window.XLSX){showUploadStatus('Excel library not loaded, please try again.','error',isAdminOverride);return;}
+  const deadlinePassed=isDeadlinePassed();
+
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const sheetName=wb.SheetNames.find(s=>s.toLowerCase().includes('pred'))||wb.SheetNames[0];
+      const ws=wb.Sheets[sheetName];
+      const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+
+      // Read name from D1
+      const playerName=String(data[0]?.[3]||'').trim();
+      if(!playerName){
+        showUploadStatus('❌ No name found in cell D1. Make sure you filled in your name at the top.','error',isAdminOverride);
+        return;
+      }
+
+      // Check if already locked (non-admin)
+      const existing=state.players.find(p=>p.name===playerName);
+      if(!isAdminOverride){
+        if(deadlinePassed){
+          showUploadStatus(`❌ The submission deadline has passed. No new submissions are accepted.`,'error',false);
+          return;
+        }
+        if(existing&&existing.locked){
+          showUploadStatus(`❌ ${playerName} has already submitted. Predictions are locked and cannot be changed.`,'error',false);
+          return;
+        }
+      }
+
+      // Parse predictions
+      const predictions={};
+      let matched=0;
+      for(let r=3;r<data.length;r++){
+        const row=data[r];
+        const matchId=parseInt(row[0]);
+        if(isNaN(matchId)||matchId<1||matchId>72) continue;
+        const h=parseInt(row[4]), a=parseInt(row[6]);
+        if(!isNaN(h)&&!isNaN(a)&&h>=0&&a>=0){predictions[matchId]={home:h,away:a};matched++;}
+      }
+
+      const now=new Date().toISOString();
+      const exIdx=state.players.findIndex(p=>p.name===playerName);
+      let action='';
+      if(exIdx>=0){
+        state.players[exIdx].predictions=predictions;
+        state.players[exIdx].submittedAt=now;
+        state.players[exIdx].locked=true;
+        action=isAdminOverride?'admin_reupload':'resubmit';
+      } else {
+        state.players.push({name:playerName,predictions,submittedAt:now,locked:true});
+        action='submit';
+      }
+
+      addLog(action,playerName,`${matched} predictions${isAdminOverride?' (admin override)':''}`);
+      saveToSheets();
+      showUploadStatus(`✅ ${playerName} — ${matched} predictions submitted and locked.`,'ok',isAdminOverride);
+      renderTab('submit');
+    } catch(err){ showUploadStatus('❌ Error reading file: '+err.message,'error',isAdminOverride); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function showUploadStatus(msg,type,isAdmin){
+  const id=isAdmin?'admin-upload-status':'upload-status';
+  const el=document.getElementById(id);
+  if(el){el.textContent=msg;el.style.color=type==='error'?'#e53e3e':'#059669';}
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function fmtDate(iso){
+  try{return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
+  catch{return iso;}
+}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadFromSheets();
+setInterval(loadFromSheets,30000);
+</script>
+</body>
+</html>
